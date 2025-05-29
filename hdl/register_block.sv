@@ -58,6 +58,9 @@ always_ff @(posedge clk, negedge reset_n) begin
                      end
                 endcase 
             end
+            else begin
+                tx_data_reg <= tx_data_reg;
+            end
             if(start_tx_re_cfg) begin
                       ctrl_reg <= 'h0;
             end 

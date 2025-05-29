@@ -1,2 +1,2 @@
 # APB_UART
-APB_UART hardware 
+APB_UART using System Verilog

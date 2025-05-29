@@ -34,7 +34,7 @@ module apb_slave
     logic       [31:0]               reg_rdata       ;
     logic                            reg_pready      ;
 
-
+    logic                            reg_pwrite_o    ;
     
 
     always_comb begin   : CAL_NEXT_STATE
@@ -69,6 +69,7 @@ module apb_slave
         reg_rdata = 32'h0;
         reg_pready = 1'b1;
         host_read_data = 1'b0;
+        reg_pwrite_o = 1'b0;
         case(curr_state)
                 IDLE: begin
                     reg_pready = 1'b0;
@@ -83,17 +84,19 @@ module apb_slave
                     if(pstrb[0]) begin
                         reg_waddr = paddr;
                         reg_wdata = pwdata;
-                    
+                        
                     end else begin
                         reg_waddr = paddr;
                         reg_wdata = 'hz;
                     end
+                    reg_pwrite_o = pwrite;
                 end
                 READ: begin
                     reg_pready = 1'b1;
                     reg_raddr = paddr;
                     reg_rdata = rdata;
                     host_read_data = 1'b1;
+                    reg_pwrite_o = pwrite;
                 end
                 default: begin
                 end
@@ -115,7 +118,7 @@ module apb_slave
     assign waddr      =     reg_waddr             ;
     assign wdata      =     reg_wdata             ;
     assign raddr      =     reg_raddr             ;
-    assign pwrite_o   =     pwrite                ;
+    assign pwrite_o   =     reg_pwrite_o          ;
     assign pready     =     reg_pready            ;
     assign pslverr    =  ~( wadderr & radderr )   ;
 endmodule
