@@ -34,7 +34,7 @@ module uart_rx
     logic               [7:0]               rx_reg                                      ; 
     logic               [7:0]               rx_reg_next                                 ;
     logic                                   parity_bit                                  ;
-    logic                                   baud_en                                     ;
+    logic                                   count_en                                    ;
     logic                                   bit_done                                    ;
     logic               [1:0]               reg_stop_bit                                ;
     logic               [1:0]               reg_stop_bit_next                           ;
@@ -73,7 +73,7 @@ always_comb begin
     count_stop_bit_next = count_stop_bit;
     reg_stop_bit_next = reg_stop_bit;
     next_state = state;
-    
+    parity_error = 1'b0;
     case (state) 
         IDLE: begin
             start_bclk = 1'b1;
@@ -91,10 +91,10 @@ always_comb begin
         end
         ST_START: begin
             start_bclk = 1'b0;
-            baud_en = 1'b1;
+            count_en = 1'b1;
             rx_reg_next = 'h0;
             if(bit_done) begin
-                baud_en = 1'b0;
+                count_en = 1'b0;
                 next_state = ST_DATA;   
             end  
             else begin
@@ -104,16 +104,20 @@ always_comb begin
         ST_DATA:  begin
         start_bclk = 1'b0;
         count_next = count;
-        baud_en = 1'b1;
+        count_en = 1'b1;
         if(baud_next == 8) begin
             rx_reg_next = rx_reg;
             rx_reg_next[0] = rx;
         end
         if(bit_done) begin
             rx_reg_next = rx_reg << 1;
-            baud_en =1'b0;
+            count_en =1'b0;
             if (count == count_data-1) begin 
-                next_state = ST_PRT;
+                if(parity_en) begin
+                    next_state = ST_PRT;
+                end else begin
+                    next_state = STOP_BIT;
+                end 
                 rx_data = rx_reg;
                 count_next = 4'h0;
             end
@@ -132,23 +136,24 @@ always_comb begin
         ST_PRT: begin
             start_bclk = 1'b0;
             parity_bit = rx;
-            baud_en = 1'b1;
+            count_en = 1'b1;
             if (bit_done) begin
                 next_state = STOP_BIT;
-                baud_en = 1'b0;
+                count_en = 1'b0;
             end
             else begin 
                 next_state = ST_PRT; 
             end
+            
         end
         STOP_BIT:  begin
             start_bclk = 1'b0;
-            baud_en = 1'b1;
+            count_en = 1'b1;
             reg_stop_bit_next = reg_stop_bit;
-            reg_stop_bit_next[0] = 1'b1;
+            reg_stop_bit_next[0] = rx;
         if(bit_done) begin
             reg_stop_bit_next = reg_stop_bit << 1;
-            baud_en = 1'b0;
+            count_en = 1'b0;
             if (count_stop_bit == count_stop) begin 
                 next_state = IDLE;
                 count_stop_bit_next = 'h0;
@@ -162,14 +167,20 @@ always_comb begin
         end else begin
             next_state = STOP_BIT;
         end 
+        case ({parity_en, parity_type})
+            2'b10: parity_error = ~((^rx_reg) ^ parity_bit) ;
+            2'b11: parity_error =  (^rx_reg) ^ parity_bit   ;
+            default : parity_error = 1'b0;
+        endcase
         end
         default: begin
             parity_bit  =    1'b0;
             rx_done     =    1'b0;
             rx_data     =     'h0;
             rts_n       =    1'b0;  
-            baud_en     =    1'b0;
+            count_en     =    1'b0;
             start_bclk  =    1'b1;
+            
         end
     endcase
 end
@@ -199,7 +210,7 @@ always_ff @(posedge clk, negedge reset_n) begin
     end
 
 always_comb begin
-    if(baud_en) begin
+    if(count_en) begin
         if(Bclk) begin
          baud_next = baud +1;
         end else begin
@@ -216,7 +227,7 @@ always_ff @(posedge clk, negedge reset_n) begin
         baud <= 0;
         bit_done <= 0;
     end 
-    else if(baud_en) begin
+    else if(count_en) begin
             if(baud == 15 ) begin
                 bit_done <= 1'b1;
                 baud <=0;
@@ -229,12 +240,12 @@ always_ff @(posedge clk, negedge reset_n) begin
      end
     end
 
-always_comb begin
-    case ({parity_en, parity_type})
-        2'b10: parity_error = ~((^rx_reg) ^ parity_bit) ;
-        2'b11: parity_error =  (^rx_reg) ^ parity_bit   ;
-        default : parity_error = 1'b0;
-    endcase
-end
+// always_comb begin
+//     case ({parity_en, parity_type})
+//         2'b10: parity_error = ~((^rx_reg) ^ parity_bit) ;
+//         2'b11: parity_error =  (^rx_reg) ^ parity_bit   ;
+//         default : parity_error = 1'b0;
+//     endcase
+// end
 
 endmodule

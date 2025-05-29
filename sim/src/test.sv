@@ -311,7 +311,7 @@ task Write_tx_data_reg(logic [7:0] tx_data);
 
             if (dti_apb_uart_top_i.register_block.parity_en) begin
                // rx = (dti_apb_uart_top_i.register_block.parity_type) ? ~(^(data[data_num-1:0])) : (^(data[data_num-1:0]));
-               rx = 1'b0;
+               rx = 1'b1;
                 repeat (405) begin
                     @(posedge clk);
                 end

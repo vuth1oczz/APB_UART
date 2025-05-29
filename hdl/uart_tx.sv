@@ -133,9 +133,13 @@ always_comb begin : PROCESS_NEXT_STATE
     case(curr_state)
         IDLE: begin
             tx_o =1'b1;
-            if(start_tx && ~cts_n) begin
+            if(start_tx) begin
                     TX_DONE = 1'b0;
-                    next_state = START_BIT;
+                    if(~cts_n) begin
+                        next_state = START_BIT;
+                    end else begin
+                        next_state  = IDLE;
+                    end
             end else begin
                 start_tx_reg = 1'b0;
                 next_state = IDLE;
@@ -184,7 +188,7 @@ always_comb begin : PROCESS_NEXT_STATE
             end
         end
         STOP_BIT_FIRST: begin
-            tx_o = 1'b0;
+            tx_o = 1'b1;
             count_en = 1'b1;
             if(bit_done) begin
                 if(stop_bit_num) begin
@@ -198,7 +202,7 @@ always_comb begin : PROCESS_NEXT_STATE
             end
         end
         STOP_BIT_SECOND: begin
-            tx_o = 1'b0; 
+            tx_o = 1'b1; 
             count_en = 1'b1;
             if(bit_done) begin
                 next_state = IDLE;
@@ -211,7 +215,7 @@ always_comb begin : PROCESS_NEXT_STATE
         default begin
             start_tx_reg = 1'b0;
             next_state = IDLE;
-            TX_DONE = 1'b0;
+            TX_DONE = 1'b1;
             tx_o = 1'b1;
             count_en = 1'b0;
         end
