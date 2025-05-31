@@ -37,8 +37,7 @@ always_ff @(posedge clk, negedge reset_n) begin
             tx_data_reg <= 0;
             rx_data_reg <= 0;
             cfg_reg <= 0;
-            ctrl_reg <= 0;
-           
+            ctrl_reg <= 0;  
             wadderr <= 0;
         end 
         else begin

@@ -1,5 +1,7 @@
 module apb_slave
 (   
+    input                            clk             ,
+    input                            reset_n         ,
     input                            pclk            ,
     input                            presetn         ,
     input                            psel            ,
@@ -26,7 +28,7 @@ module apb_slave
 
  );
 
-    enum logic [1:0] {IDLE, WRITE, READ} curr_state, next_state;
+    //enum logic [1:0] {IDLE, WRITE, READ} curr_state, next_state;
 
     logic       [31:0]               reg_wdata       ;
     logic       [11:0]               reg_waddr       ;
@@ -37,88 +39,22 @@ module apb_slave
     logic                            reg_pwrite_o    ;
     
 
-    always_comb begin   : CAL_NEXT_STATE
-        case(curr_state)
-                IDLE: begin
-                    casex ({psel,penable,pwrite})
-                        3'b0xx: next_state = IDLE;
-                        3'b110: next_state = READ;
-                        3'b111: next_state = WRITE;  
-                    endcase 
-                end
-                WRITE: begin
-                    casex ({psel,penable,pwrite})
-                        3'bxxx: next_state = IDLE;
-                        3'b111: next_state = WRITE;  
-                    endcase 
-                end
-                READ: begin
-                    casex ({psel,penable,pwrite})
-                        3'bxxx: next_state = IDLE;
-                        3'b110: next_state = READ;
-                    
-                    endcase 
-                end
-        endcase
-    end
-
-    always_comb begin   : CAL_OUTPUT
-        reg_waddr  =12'h0;
-        reg_wdata = 32'h0;
-        reg_raddr = 12'h0;
-        reg_rdata = 32'h0;
-        reg_pready = 1'b1;
-        host_read_data = 1'b0;
-        reg_pwrite_o = 1'b0;
-        case(curr_state)
-                IDLE: begin
-                    reg_pready = 1'b0;
-                end
-                WRITE: begin
-                    if(~penable & ~psel) begin
-                        reg_pready = 1'b0;
-                    end else begin
-                        reg_pready = 1'b1;
-                    end
-                    
-                    if(pstrb[0]) begin
-                        reg_waddr = paddr;
-                        reg_wdata = pwdata;
-                        
-                    end else begin
-                        reg_waddr = paddr;
-                        reg_wdata = 'hz;
-                    end
-                    reg_pwrite_o = pwrite;
-                end
-                READ: begin
-                    reg_pready = 1'b1;
-                    reg_raddr = paddr;
-                    reg_rdata = rdata;
-                    host_read_data = 1'b1;
-                    reg_pwrite_o = pwrite;
-                end
-                default: begin
-                end
-        endcase
-    end
+always_comb begin
+    reg_pready       = ( ~penable  & ~psel               )? 1'b0  : 1'b1   ;
+    reg_waddr        = (  psel     &  penable   & pwrite )? paddr : 12'h0  ;
+    reg_wdata        =    pstrb[0] ?  pwdata                      : 'hz    ;
+    reg_raddr        = (  psel     &  penable   & ~pwrite)? paddr : 12'h0  ;
+    reg_rdata        = (  psel     &  penable   & ~pwrite)? rdata : 'h0    ;
+    host_read_data   = (  psel     &  penable   & ~pwrite)? 1'b1  : 1'b0   ;
+    reg_pwrite_o     = (  psel     &  penable            )? pwrite: 1'b0   ;
+end
+assign prdata     =     reg_rdata             ;
+assign waddr      =     reg_waddr             ;
+assign wdata      =     reg_wdata             ;
+assign raddr      =     reg_raddr             ;
+assign pwrite_o   =     reg_pwrite_o          ;
+assign pready     =     reg_pready            ;
+assign pslverr    =  ( wadderr & radderr )   ;
 
 
-    always_ff @( posedge pclk, negedge presetn ) begin : UPDATE_CURRENT_STATE
-        if(~presetn) begin
-            curr_state <= IDLE; 
-        end else begin
-            curr_state <= next_state;
-        end
-        
-    end
-
-
-    assign prdata     =     reg_rdata             ;
-    assign waddr      =     reg_waddr             ;
-    assign wdata      =     reg_wdata             ;
-    assign raddr      =     reg_raddr             ;
-    assign pwrite_o   =     reg_pwrite_o          ;
-    assign pready     =     reg_pready            ;
-    assign pslverr    =  ~( wadderr & radderr )   ;
 endmodule

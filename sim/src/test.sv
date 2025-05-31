@@ -2,7 +2,7 @@ module test;
 
     logic                           clk;
     logic                           reset_n;
-    logic [11:0]      paddr;
+    logic [11:0]                    paddr;
     logic [31:0]                    pwdata;
     logic [3:0]                     pstrb;
     logic                           pwrite;
@@ -26,6 +26,8 @@ dti_apb_uart_top #(
 ) dti_apb_uart_top_i (
   .clk    (clk),
   .reset_n (reset_n),
+  .presetn(reset_n),
+  .pclk(clk),
   .psel   (psel),
   .penable(penable),
   .pwrite (pwrite),

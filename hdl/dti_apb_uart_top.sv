@@ -7,6 +7,8 @@ module dti_apb_uart_top
 (
     input                       clk             ,
     input                       reset_n         ,  
+    input                       pclk            ,
+    input                       presetn         ,
     input                       psel            ,
     input                       penable         ,
     input                       pwrite          ,
@@ -49,6 +51,8 @@ module dti_apb_uart_top
     logic                           parity_error                        ;
     logic                           host_read_data                      ;
 apb_slave apb_slave (
+        .clk                        ( clk            )                  ,
+        .reset_n                    ( reset_n        )                  ,
         .pclk                       ( clk            )                  ,
         .presetn                    ( reset_n        )                  ,
         .psel                       ( psel           )                  ,

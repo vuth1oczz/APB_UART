@@ -22,9 +22,6 @@ module uart_rx
     output    logic                         rts_n
 );
     enum logic [2:0]  {IDLE, ST_START, ST_DATA, ST_PRT, STOP_BIT } state, next_state    ;
-    
-    localparam                              baud_rate             =  BAUD_RATE          ;
-    localparam                              frequency             =  FREQUENCY_CLK      ;
     logic               [3:0]               count_data                                  ;
     logic               [1:0]               count_stop                                  ;
     logic               [3:0]               count                                       ;
@@ -42,14 +39,14 @@ module uart_rx
     logic               [1:0]               count_stop_bit_next                         ;
     logic                                   Bclk                                        ;
     logic                                   start_bclk                                  ;
-    bclk_gen #(
-        .BAUD_RATE(BAUD_RATE),
-        .FREQUENCY_CLK(FREQUENCY_CLK)
-    ) bclk_gen(
-        .clk                               ( clk        )                               ,
-        .reset_n                           ( reset_n    )                               ,
-        .Bclk                              ( Bclk       )                               ,
-        .start                             ( start_bclk )
+bclk_gen #(
+    .BAUD_RATE                         ( BAUD_RATE     )                               ,
+    .FREQUENCY_CLK                     ( FREQUENCY_CLK )
+) bclk_gen(
+    .clk                               ( clk           )                               ,
+    .reset_n                           ( reset_n       )                               ,
+    .Bclk                              ( Bclk          )                               ,
+    .start                             ( start_bclk    )
     );
 always_comb begin
     case (data_bit_num)
@@ -107,10 +104,10 @@ always_comb begin
         count_en = 1'b1;
         if(baud_next == 8) begin
             rx_reg_next = rx_reg;
-            rx_reg_next[0] = rx;
+            rx_reg_next[count] = rx;
         end
         if(bit_done) begin
-            rx_reg_next = rx_reg << 1;
+          //  rx_reg_next = rx_reg << 1;
             count_en =1'b0;
             if (count == count_data-1) begin 
                 if(parity_en) begin
@@ -228,7 +225,7 @@ always_ff @(posedge clk, negedge reset_n) begin
         bit_done <= 0;
     end 
     else if(count_en) begin
-            if(baud == 15 ) begin
+            if(baud == 16 ) begin
                 bit_done <= 1'b1;
                 baud <=0;
             end else begin
