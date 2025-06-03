@@ -237,12 +237,5 @@ always_ff @(posedge clk, negedge reset_n) begin
      end
     end
 
-// always_comb begin
-//     case ({parity_en, parity_type})
-//         2'b10: parity_error = ~((^rx_reg) ^ parity_bit) ;
-//         2'b11: parity_error =  (^rx_reg) ^ parity_bit   ;
-//         default : parity_error = 1'b0;
-//     endcase
-// end
 
 endmodule

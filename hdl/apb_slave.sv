@@ -28,7 +28,6 @@ module apb_slave
 
  );
 
-    //enum logic [1:0] {IDLE, WRITE, READ} curr_state, next_state;
 
     logic       [31:0]               reg_wdata       ;
     logic       [11:0]               reg_waddr       ;

@@ -1,4 +1,4 @@
- module register (
+ module register_block (
     input                                   clk                 ,
     input                                   reset_n             ,
     //apb slave
