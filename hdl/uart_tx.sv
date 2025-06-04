@@ -127,7 +127,6 @@ always_ff @( posedge clk, negedge reset_n ) begin : GENARTE_BAUTE
     end
 end
 
-
 always_comb begin : PROCESS_NEXT_STATE
     reg_data_bit_next = reg_data_bit;
     count_bit_next = count_bit;

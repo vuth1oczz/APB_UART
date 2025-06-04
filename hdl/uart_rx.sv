@@ -236,6 +236,4 @@ always_ff @(posedge clk, negedge reset_n) begin
         bit_done = 1'b0;
      end
     end
-
-
 endmodule

@@ -55,5 +55,4 @@ assign pwrite_o   =     reg_pwrite_o          ;
 assign pready     =     reg_pready            ;
 assign pslverr    =  ( wadderr & radderr )   ;
 
-
 endmodule

@@ -74,7 +74,7 @@ apb_slave apb_slave (
         .host_read_data             ( host_read_data )
     );
 
-register register_block (
+register_block register_block (
     .clk                            ( clk                )              ,
     .reset_n                        ( reset_n            )              ,
     .waddr                          ( waddr              )              ,
